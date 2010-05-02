@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') OR die('No direct script access.');
 
 /**
- * Blog category model
+ * Blog tag model
  *
  * @package     Blog
  * @author      Kyle Treubig
@@ -34,11 +34,11 @@ class Model_Tag extends Sprig
 
 		try
 		{
-			DB::delete('article_tag')->where('tag_id', '=', $this->id)->execute();
+			DB::delete('articles_tags')->where('tag_id', '=', $this->id)->execute();
 		}
 		catch (Database_Exception $e)
 		{
-			Kohana::$log->add(Kohana::ERROR, 'Exception occured while modifying deleted category\'s articles. '.$e->getMessage());
+			Kohana::$log->add(Kohana::ERROR, 'Exception occured while modifying deleted tag\'s articles. '.$e->getMessage());
 			return $this;
 		}
 

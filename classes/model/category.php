@@ -33,7 +33,7 @@ class Model_Category extends Sprig
 			$benchmark = Profiler::start('blog', 'delete category');
 		}
 
-		$uncategorized = Sprig::('category', array('name'=>'Uncategorized'))->load();
+		$uncategorized = Sprig::factory('category', array('name'=>'Uncategorized'))->load();
 
 		// Modify category IDs for all child articles
 		try
