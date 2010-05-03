@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `articles` (
 	`id` int(11) NOT NULL auto_increment,
+	`version` int(4) NOT NULL,
 	`title` varchar(128) NOT NULL,
 	`slug` varchar(128) NOT NULL,
 	`text` text NOT NULL,

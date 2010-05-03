@@ -8,10 +8,11 @@
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Model_Article extends Sprig
+class Model_Article extends Versioned_Sprig
 	implements Acl_Resource_Interface {
 
 	public function _init() {
+		parent::_init();
 		$this->_fields += array(
 			'id'         => new Sprig_Field_Auto,
 			// Metadata
@@ -27,9 +28,14 @@ class Model_Article extends Sprig
 			'state' => new Sprig_Field_Char(array(
 				'choices' => array(
 					'draft'     => 'Draft',
-					'published' => 'Publiished',
+					'published' => 'Published',
 					'archived'  => 'Archived'
 				),
+			)),
+			'comment'   => new Sprig_Field_Char(array(
+				'empty' => TRUE,
+				'in_db' => FALSE,
+				'label' => 'Reason for edit',
 			)),
 			// Relationships
 			'statistic'  => new Sprig_Field_HasOne(array(
@@ -49,10 +55,35 @@ class Model_Article extends Sprig
 				'model'  => 'comment',
 			)),
 			 */
+			'revisions'  => new Sprig_Field_HasMany(array(
+				'model'  => 'Article_Revision',
+			)),
 			'tags'       => new Sprig_Field_ManyToMany(array(
 				'model'  => 'tag',
 			)),
 		);
+	}
+
+	/**
+	 * Overload Sprig::__get() to get date fields
+	 */
+	public function __get($name) {
+		if ($name == 'year')
+		{
+			return date("Y", $this->date);
+		}
+		elseif ($name == 'month')
+		{
+			return date("n", $this->date);
+		}
+		elseif ($name == 'day')
+		{
+			return date("j", $this->date);
+		}
+		else
+		{
+			return parent::__get($name);
+		}
 	}
 
 	/**

@@ -23,8 +23,18 @@ class Model_Category extends Sprig
 	}
 
 	/**
+	 * Get all published articles belonging to this category
+	 */
+	public function published(Database_Query_Builder_Select $query = NULL, $limit = 1) {
+		return Sprig::factory('article', array(
+			'state'    => 'published',
+			'category' => $this,
+		))->load($query, $limit);
+	}
+
+	/**
 	 * Overload Sprig::delete() to update child articles
-	 * to become children of the Uncategorized category
+	 * to become children of the uncategorized category
 	 */
 	public function delete(Database_Query_Builder_Delete $query = NULL) {
 		Kohana::$log->add(Kohana::DEBUG, 'Beginning category deletion for category_id='.$this->id);
@@ -33,7 +43,7 @@ class Model_Category extends Sprig
 			$benchmark = Profiler::start('blog', 'delete category');
 		}
 
-		$uncategorized = Sprig::factory('category', array('name'=>'Uncategorized'))->load();
+		$uncategorized = Sprig::factory('category', array('name'=>'uncategorized'))->load();
 
 		// Modify category IDs for all child articles
 		try
@@ -58,13 +68,13 @@ class Model_Category extends Sprig
 	/**
 	 * Acl_Resource_Interface implementation of get_resource_id
 	 *
-	 * If the current category is Uncategorized, return a bogus
+	 * If the current category is uncategorized, return a bogus
 	 * resource to prevent deletion/modification
 	 *
 	 * @return  string
 	 */
 	public function get_resource_id() {
-		if ($this->loaded() AND $this->name == 'Uncategorized')
+		if ($this->loaded() AND $this->name == 'uncategorized')
 			return 'bogus_resource';
 		else
 			return 'category';

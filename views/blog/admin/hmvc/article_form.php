@@ -7,13 +7,51 @@
 <h2><?php echo $legend; ?></h2>
 <?php echo Form::open(); ?> 
 
-<?php foreach ($article->inputs(FALSE) as $field=>$input): ?>
-<?php echo isset($errors[$field]) ? '<p class="error">'.$errors[$field].'</p>' : ''; ?> 
+<?php echo isset($errors['title']) ? '<p class="error">'.$errors['title'].'</p>' : '' ?> 
 <p>
-	<?php echo $article->label($field); ?> 
-	<?php echo $input; ?> 
+	<?php echo $article->label('title') ?> 
+	<?php echo $article->input('title') ?> 
 </p>
-<?php endforeach; ?>
+
+<?php if ($slug_editable): ?>
+	<?php echo isset($errors['slug']) ? '<p class="error">'.$errors['slug'].'</p>' : '' ?> 
+	<p>
+		<?php echo $article->label('slug') ?> 
+		<?php echo $article->input('slug') ?> 
+	</p>
+<?php endif; ?>
+
+<?php echo isset($errors['text']) ? '<p class="error">'.$errors['text'].'</p>' : '' ?> 
+<p>
+	<?php echo $article->label('text') ?> 
+	<?php echo $article->input('text') ?> 
+</p>
+
+<?php echo isset($errors['state']) ? '<p class="error">'.$errors['state'].'</p>' : '' ?> 
+<p>
+	<?php echo $article->label('state') ?> 
+	<?php echo $article->input('state') ?> 
+</p>
+
+<?php echo isset($errors['category']) ? '<p class="error">'.$errors['category'].'</p>' : '' ?> 
+<p>
+	<?php echo $article->label('category') ?> 
+	<?php echo $article->input('category') ?> 
+</p>
+
+<?php echo isset($errors['tags']) ? '<p class="error">'.$errors['tags'].'</p>' : '' ?> 
+<p>
+	<?php echo $article->label('tags') ?> 
+	<?php echo $article->input('tags') ?> 
+</p>
+
+<?php if ($comment_needed): ?>
+	<?php echo isset($errors['comment']) ? '<p class="error">'.$errors['comment'].'</p>' : '' ?> 
+	<p>
+		<?php echo $article->label('comment') ?> 
+		<?php echo $article->input('comment') ?> 
+	</p>
+<?php endif; ?>
 
 <p class="submit">
 	<?php echo Form::submit('submit', $submit); ?> 

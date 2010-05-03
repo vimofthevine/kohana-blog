@@ -4,7 +4,7 @@
 		<ul>
 			<li>Manage
 				<ul>
-					<li><?php echo HTML::anchor(Route::get('admin_blog')->uri(array('controller'=>'post', 'action'=>'list')), 'Posts') ?></li>
+					<li><?php echo HTML::anchor(Route::get('admin_blog')->uri(array('controller'=>'article', 'action'=>'list')), 'Articles') ?></li>
 					<li><?php echo HTML::anchor(Route::get('admin_blog')->uri(array('controller'=>'category', 'action'=>'list')), 'Categories') ?></li>
 					<li><?php echo HTML::anchor(Route::get('admin_blog')->uri(array('controller'=>'tag', 'action'=>'list')), 'Tags') ?></li>
 				</ul>

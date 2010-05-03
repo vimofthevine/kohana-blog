@@ -22,6 +22,19 @@ class Model_Tag extends Sprig
 	}
 
 	/**
+	 * Get all published articles containing this tag
+	 */
+	public function published(Database_Query_Builder_Select $query = NULL, $limit = 1) {
+		$field = $this->_fields['articles'];
+		$model = Sprig::factory($field->model);
+		$query = ( ! $query) ? DB::select() : $query;
+		$query->join($field->through)
+			->on($model->fk($field->through), '=', $model->pk(TRUE))
+			->where($this->fk($field->through), '=', $this->{$this->_primary_key});
+		return $model->load($query, $limit);
+	}
+
+	/**
 	 * Overload Sprig::delete() to remove child articles
 	 * from the article-tag pivot table
 	 */

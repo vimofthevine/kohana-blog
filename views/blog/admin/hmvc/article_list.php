@@ -1,2 +1,4 @@
-<h2>Article List</h2>
-<?php echo $grid; ?>
+<h2><?php echo $legend ?></h2>
+<?php echo $pagination ?> 
+<?php echo $grid; ?> 
+<?php echo $pagination ?> 
