@@ -13,10 +13,10 @@ class Model_Statistic extends Sprig {
 	/**
 	 * @var int Number of data points to record
 	 */
-	const LENGTH = 7;
+	private $_length = 7;
 
 	// Constant index for today
-	const TODAY = LENGTH - 1;
+	private $_today = 6;
 
 	public function _init() {
 		$this->_fields += array(
@@ -24,19 +24,27 @@ class Model_Statistic extends Sprig {
 			'article'   => new Sprig_Field_BelongsTo(array(
 				'model' => 'article',
 			)),
-			'data'      => new Sprig_Field_Char,
-			'total'     => new Sprig_Field_Integer,
-			'views'     => new Sprig_Field_Integer,
+			'data'      => new Sprig_Field_Char(array(
+				'empty' => TRUE,
+			)),
+			'total'     => new Sprig_Field_Integer(array(
+				'empty' => TRUE,
+				'default' => 0,
+			)),
+			'views'     => new Sprig_Field_Integer(array(
+				'empty' => TRUE,
+				'default' => 0,
+			)),
 		);
 	}
 
 	/**
 	 * Overload Sprig::__set() to serialize the data array
 	 */
-	public __set($name, $value) {
-		if ($name == 'data')
+	public function __set($name, $value) {
+		if ($name == 'data' AND is_array($value))
 		{
-			$value = serialize($value);
+			$value = implode(",", $value);
 		}
 		return parent::__set($name, $value);
 	}
@@ -44,14 +52,21 @@ class Model_Statistic extends Sprig {
 	/**
 	 * Overload Sprig::__get() to unserialize the data array
 	 */
-	public __get($name) {
+	public function __get($name) {
 		if ($name == 'data')
 		{
-			return unserialize($this->data);
+			if (empty($this->_original['data']))
+			{
+				return array_fill(0, $this->_length, 0);
+			}
+			else
+			{
+				return explode(",", $this->_original['data']);
+			}
 		}
 		else
 		{
-			return parent::_get($name);
+			return parent::__get($name);
 		}
 	}
 
@@ -61,14 +76,14 @@ class Model_Statistic extends Sprig {
 	 * - Increment weekly view count
 	 * - Increment "today's" view count
 	 */
-	public function count() {
+	public function record() {
 		// Increment total view count
 		$this->total++;
 		// Increment weekly view count
 		$this->views++;
 		// Increment today's view count
 		$data = $this->data;
-		$data[TODAY]++;
+		$data[$this->_today] = $data[$this->_today] + 1;
 		$this->data = $data;
 
 		return $this;
@@ -85,14 +100,14 @@ class Model_Statistic extends Sprig {
 		$this->views = 0;
 		$data = $this->data;
 
-		foreach ($i = 0; $i < (TODAY); $i++)
+		for ($i = 0; $i < ($this->_today); $i++)
 		{
 			$data[$i] = $data[$i+1];
 			// Recount weekly view count
 			$this->views += $data[$i];
 		}
 
-		$data[TODAY] = 0;
+		$data[$this->_today] = 0;
 		$this->data = $data;
 		return $this;
 	}

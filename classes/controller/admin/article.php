@@ -170,6 +170,9 @@ class Controller_Admin_Article extends Controller_Template_Admin {
 		try
 		{
 			$article->create();
+			$article->load();
+			$statistic = Sprig::factory('statistic', array('article'=>$article))->create();
+
 			$message = __('The article, :title, has been created.', array(':title'=>$article->title));
 
 			// Return message if an ajax request

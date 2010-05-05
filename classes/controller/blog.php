@@ -200,6 +200,8 @@ class Controller_Blog extends Controller_Template_Website {
 			}
 		}
 
+		$article->statistic->load()->record()->update();
+
 		$this->template->content = View::factory('blog/front/article')
 			->set('article', $article);
 	}
