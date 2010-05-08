@@ -8,7 +8,7 @@
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Admin_Tag extends Controller_Template_Admin {
+class Controller_Admin_Blog_Tag extends Controller_Template_Admin {
 
 	/**
 	 * Register controller as an admin controller

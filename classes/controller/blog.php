@@ -202,8 +202,20 @@ class Controller_Blog extends Controller_Template_Website {
 
 		$article->statistic->load()->record()->update();
 
+		// Handle comment posting
+		$form = Request::factory('comments/blog/create/'.$article->id)->execute()->response;
+		if ($form === TRUE)
+		{
+			$form = __('Thank you for posting!');
+		}
+
+		// Handle comment listing
+		$list = Request::factory('comments/blog/public/'.$article->id)->execute()->response;
+
 		$this->template->content = View::factory('blog/front/article')
-			->set('article', $article);
+			->set('article', $article)
+			->set('comment_form', $form)
+			->set('comment_list', $list);
 	}
 
 	public function action_archive() {

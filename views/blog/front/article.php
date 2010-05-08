@@ -4,3 +4,6 @@
 	on <?php echo date('F jS Y \a\t g:s a', $article->date) ?>
 </p>
 <?php echo $article->text ?>
+
+<?php echo $comment_form ?> 
+<?php echo $comment_list ?> 

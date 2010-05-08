@@ -47,8 +47,7 @@ Route::set('admin_blog', 'admin/blog/<controller>(/<action>(/<id>))(/<type>)(/pa
 		'type'       => 'draft|published|archived',
 		'page'       => '\d+',
 	))->defaults(array(
-		'directory'  => 'admin',
-		'controller' => 'blog',
+		'directory'  => 'admin/blog',
 		'action'     => 'list',
 	));
 
