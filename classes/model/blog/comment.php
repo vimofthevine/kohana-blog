@@ -31,7 +31,11 @@ class Model_Blog_Comment extends Sprig {
 			'url'    => new Sprig_Field_Char(array(
 				'empty' => TRUE,
 			)),
-			'text'   => new Sprig_Field_Text,
+			'text'   => new Sprig_Field_Text(array(
+				'filters' => array(
+					'Security::xss_clean' => NULL,
+				),
+			)),
 		);
 	}
 
