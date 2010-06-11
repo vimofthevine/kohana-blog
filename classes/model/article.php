@@ -4,6 +4,7 @@
  * Blog article model
  *
  * @package     Blog
+ * @category    Model
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
@@ -16,22 +17,22 @@ class Model_Article extends Versioned_Sprig
 		$this->_fields += array(
 			'id'         => new Sprig_Field_Auto,
 			// Metadata
-			'title' => new Sprig_Field_Char,
-			'slug'  => new Sprig_Field_Char(array(
+			'title' => new Sprig_Field_Tracked,
+			'slug'  => new Sprig_Field_Tracked(array(
 				'editable' => FALSE,
 			)),
-			'text'  => new Sprig_Field_Text,
 			'date'  => new Sprig_Field_Timestamp(array(
 				'auto_now_create' => TRUE,
 				'editable'        => FALSE,
 			)),
-			'state' => new Sprig_Field_Char(array(
+			'state' => new Sprig_Field_Tracked(array(
 				'choices' => array(
 					'draft'     => 'Draft',
 					'published' => 'Published',
 					'archived'  => 'Archived'
 				),
 			)),
+			'text'  => new Sprig_Field_Versioned,
 			'comment'   => new Sprig_Field_Char(array(
 				'empty' => TRUE,
 				'in_db' => FALSE,

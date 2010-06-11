@@ -1,4 +1,4 @@
-<h2>Delete Category <?php echo $category->name ?>?</h2>
+<h2><?php echo __('Delete Category :name?', array(':name'=>$category->name)) ?></h2>
 <p>
 	Are you sure you want to delete the category, <?php echo $category->name ?>?
 	This action cannot be undone.

@@ -1,145 +1,106 @@
-<?php defined('SYSPATH') OR die('No direct script access.');
+<?php defined('SYSPATH') or die('No direct script access.');
 
 /**
  * Blog category management controller
  *
  * @package     Blog
+ * @category    Controller
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Admin_Blog_Category extends Controller_Template_Admin {
+class Controller_Admin_Blog_Category extends Controller_Admin {
 
-	/**
-	 * Register controller as an admin controller
-	 */
-	public function before() {
-		parent::before();
+	protected $_resource = 'category';
 
-		$this->restrict('category', 'manage');
-		unset($this->template->menu->menu['Blog'][0]);
-	}
+	protected $_acl_map = array(
+		'new'     => 'create',
+		'edit'    => 'edit',
+		'delete'  => 'delete',
+		'default' => 'manage',
+	);
 
-	/**
-	 * Default action to list
-	 */
-	public function action_index() {
-		$this->action_list();
-	}
+	protected $_acl_required = 'all';
+
+	protected $_view_map = array(
+		'list'    => 'admin/layout/wide_column_with_menu',
+		'default' => 'admin/layout/narrow_column_with_menu',
+	);
+
+	protected $_resource_required = array('edit', 'delete');
+
+	protected $_current_nav = 'admin/blog';
 
 	/**
 	 * Generate menu for blog management
 	 */
-	private function menu() {
+	protected function _menu() {
 		return View::factory('blog/admin/menu')
 			->set('links', array(
-				'Create Category' => Request::instance()->uri(array('action'=>'new')),
+				'Create Category' => $this->request->uri(array('action'=>'new')),
 			));
+	}
+
+	/**
+	 * Load the specified category
+	 */
+	protected function _load_resource() {
+		$id = $this->request->param('id', 0);
+		$this->_resource = Sprig::factory('category', array('id'=>$id))->load();
+		if ( ! $this->_resource->loaded())
+			throw new Kohana_Exception('That category does not exist.', NULL, 404);
+	}
+
+	/**
+	 * Redirect index action to list
+	 */
+	public function action_index() {
+		$this->request->redirect( $this->request->uri(
+			array('action' => 'list')), 301);
 	}
 
 	/**
 	 * Display list of categories
 	 */
 	public function action_list() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Category::action_list');
-
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Category::action_list');
+		$this->template->content = View::factory('blog/admin/category_list')
+			->bind('request', $this->request)
+			->bind('categories', $categories);
 		$categories = Sprig::factory('category')->load(NULL, FALSE);
-
-		// Check if there are any categories to display
-		if (count($categories) == 0)
-		{
-			$hmvc = View::factory('blog/admin/hmvc/category_none');
-
-			$view = View::factory('blog/admin/list')
-				->set('menu', $this->menu())
-				->set('list', $hmvc);
-
-			$this->template->content = $this->internal_request ? $hmvc : $view;
-			return;
-		}
-
-		// Create category list
-		$grid = new Grid;
-		$grid->column()->field('id')->title('ID');
-		$grid->column()->field('name')->title('Name');
-		$grid->column('action')->title('Actions')->text('Edit')->class('edit')
-			->action(Request::instance()->uri(array('action' => 'edit')));
-		$grid->column('action')->title('')->text('Delete')->class('delete')
-			->action(Request::instance()->uri(array('action' => 'delete')));
-		$grid->data($categories);
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/category_list')
-			->set('grid', $grid);
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 	/**
 	 * Create a new category
 	 */
 	public function action_new() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Category::action_new');
-
-		// Restrict access
-		if ( ! $this->a2->allowed('category', 'create'))
-		{
-			$message = __('You do not have permission to create new categories.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action' => '')) );
-			}
-		}
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Category::action_new');
+		$this->template->content = View::factory('blog/admin/category_form')
+			->set('legend', __('Create Category'))
+			->set('submit', __('Create'))
+			->bind('category', $category)
+			->bind('errors', $errors);
 
 		$category = Sprig::factory('category')->values($_POST);
 
-		try
+		if ($_POST)
 		{
-			$category->create();
-			$message = __('The category, :name, has been created.', array(':name'=>$category->name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
+			try
 			{
-				$this->template->content = $message;
+				$category->create();
+
+				Message::instance()->info('The category, :name, has been created.',
+					array(':name' => $category->name));
+
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list')) );
 			}
-			// Else set flash message and redirect
-			else
+			catch (Validate_Exception $e)
 			{
-				Message::instance()->info($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action' => '')) );
+				$errors = $e->array->errors('admin');
 			}
-		}
-		catch (Validate_Exception $e)
-		{
-			// Setup HMVC view with data
-			$hmvc = View::factory('blog/admin/hmvc/category_form')
-				->set('legend', __('Create Category'))
-				->set('submit', __('Create'))
-				->set('category', $category)
-				->set('errors', count($_POST) ? $e->array->errors('blog') : array() );
-
-			// Setup template view
-			$view = View::factory('blog/admin/form')
-				->set('menu', $this->menu())
-				->set('form', $hmvc);
-
-			// Set request response
-			$this->template->content = $this->internal_request ? $hmvc : $view;
 		}
 	}
 
@@ -147,87 +108,36 @@ class Controller_Admin_Blog_Category extends Controller_Template_Admin {
 	 * Edit category details
 	 */
 	public function action_edit() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Category::action_edit');
-
-		$id = Request::instance()->param('id');
-		$category = Sprig::factory('category', array('id' => $id))->load();
-
-		// If category is invalid, return to list
-		if ( ! $category->loaded())
-		{
-			$message = __('That category does not exist.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		// Restrict access
-		if ( ! $this->a2->allowed($category, 'edit'))
-		{
-			$message = __('You do not have permission to modify category, :name.', array(':name'=>$category->name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		$category->values($_POST);
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/category_form')
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Category::action_edit');
+		$this->template->content = View::factory('blog/admin/category_form')
 			->set('legend', __('Modify Category'))
 			->set('submit', __('Save'))
-			->set('category', $category);
+			->bind('category', $this->_resource)
+			->bind('errors', $errors);
 
-		if (count($_POST))
+		// Bind locally
+		$category = & $this->_resource;
+
+		if ($_POST)
 		{
+			$category->values($_POST);
+
 			try
 			{
 				$category->update();
-				$message = __('The category, :name, has been modified.', array(':name'=>$category->name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->info($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				Message::instance()->info('The category, :name, has been modified.',
+					array(':name' => $category->name));
+
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 			catch (Validate_Exception $e)
 			{
-				$hmvc->errors = count($_POST) ? $e->array->errors('admin') : array();
+				$errors = $e->array->errors('admin');
 			}
 		}
-
-		// Setup template view
-		$view = View::factory('blog/admin/form')
-			->set('menu', $this->menu())
-			->set('form', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 	/**
@@ -238,49 +148,14 @@ class Controller_Admin_Blog_Category extends Controller_Template_Admin {
 
 		// If deletion is not desired, redirect to list
 		if (isset($_POST['no']))
-		{
-			Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-		}
+			$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 
-		$id = Request::instance()->param('id');
-		$category = Sprig::factory('category', array('id' => $id))->load();
+		$this->template->content = View::factory('blog/admin/category_delete')
+			->bind('category', $this->_resource);
+
+		// Bind locally
+		$category = & $this->_resource;
 		$name = $category->name;
-
-		// If category is invalid, return to list
-		if ( ! $category->loaded())
-		{
-			$message = __('That category does not exist.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		// Restrict access
-		if ( ! $this->a2->allowed($category, 'delete'))
-		{
-			$message = __('You do not have permission to delete category, :name.', array(':name'=>$name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
 
 		// If deletion is confirmed
 		if (isset($_POST['yes']))
@@ -288,50 +163,22 @@ class Controller_Admin_Blog_Category extends Controller_Template_Admin {
 			try
 			{
 				$category->delete();
-				$message = __('The category, :name, has been deleted.', array(':name'=>$name));
+				Message::instance()->info('The category, :name, has been deleted.',
+					array(':name' => $name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->info($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 			catch (Exception $e)
 			{
 				Kohana::$log->add(Kohana::ERROR, 'Error occured deleting category, id='.$category->id.', '.$e->getMessage());
-				$message = __('An error occured deleting category, :name.', array(':name'=>$name));
+				Message::instance()->error('An error occured deleting category, :name.',
+					array(':name' => $name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->error($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 		}
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/category_delete')
-			->set('category', $category);
-
-		// Setup template view
-		$view = View::factory('blog/admin/delete')
-			->set('menu', $this->menu())
-			->set('confirm', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 }	// End of Controller_Admin_Category

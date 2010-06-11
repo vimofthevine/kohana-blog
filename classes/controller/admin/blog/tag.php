@@ -4,142 +4,103 @@
  * Blog tag management controller
  *
  * @package     Blog
+ * @category    Controller
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Admin_Blog_Tag extends Controller_Template_Admin {
+class Controller_Admin_Blog_Tag extends Controller_Admin {
 
-	/**
-	 * Register controller as an admin controller
-	 */
-	public function before() {
-		parent::before();
+	protected $_resource = 'tag';
 
-		$this->restrict('tag', 'manage');
-		unset($this->template->menu->menu['Blog'][0]);
-	}
+	protected $_acl_map = array(
+		'new'     => 'create',
+		'edit'    => 'edit',
+		'delete'  => 'delete',
+		'default' => 'manage',
+	);
 
-	/**
-	 * Default action to list
-	 */
-	public function action_index() {
-		$this->action_list();
-	}
+	protected $_acl_required = 'all';
+
+	protected $_view_map = array(
+		'list'    => 'admin/layout/wide_column_with_menu',
+		'default' => 'admin/layout/narrow_column_with_menu',
+	);
+
+	protected $_resource_required = array('edit', 'delete');
+
+	protected $_current_nav = 'admin/blog';
 
 	/**
 	 * Generate menu for blog management
 	 */
-	private function menu() {
+	protected function _menu() {
 		return View::factory('blog/admin/menu')
 			->set('links', array(
-				'Create Tag' => Request::instance()->uri(array('action' => 'new')),
+				'Create Tag' => $this->request->uri(array('action'=>'new')),
 			));
+	}
+
+	/**
+	 * Load the specified category
+	 */
+	protected function _load_resource() {
+		$id = $this->request->param('id', 0);
+		$this->_resource = Sprig::factory('tag', array('id'=>$id))->load();
+		if ( ! $this->_resource->loaded())
+			throw new Kohana_Exception('That tag does not exist.', NULL, 404);
+	}
+
+	/**
+	 * Redirect index action to list
+	 */
+	public function action_index() {
+		$this->request->redirect( $this->request->uri(
+			array('action' => 'list')), 301);
 	}
 
 	/**
 	 * Display list of tags
 	 */
 	public function action_list() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Tag::action_list');
-
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Tag::action_list');
+		$this->template->content = View::factory('blog/admin/tag_list')
+			->bind('request', $this->request)
+			->bind('tags', $tags);
 		$tags = Sprig::factory('tag')->load(NULL, FALSE);
-
-		// Check if there are any tags to display
-		if (count($tags) == 0)
-		{
-			$hmvc = View::factory('blog/admin/hmvc/tag_none');
-
-			$view = View::factory('blog/admin/list')
-				->set('menu', $this->menu())
-				->set('list', $hmvc);
-
-			$this->template->content = $this->internal_request ? $hmvc : $view;
-			return;
-		}
-
-		// Create tag list
-		$grid = new Grid;
-		$grid->column()->field('id')->title('ID');
-		$grid->column()->field('name')->title('Name');
-		$grid->column('action')->title('Actions')->text('Edit')->class('edit')
-			->action(Request::instance()->uri(array('action' => 'edit')));
-		$grid->column('action')->title('')->text('Delete')->class('delete')
-			->action(Request::instance()->uri(array('action' => 'delete')));
-		$grid->data($tags);
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/tag_list')
-			->set('grid', $grid);
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 	/**
 	 * Create a new tag
 	 */
 	public function action_new() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Tag::action_new');
-
-		// Restrict access
-		if ( ! $this->a2->allowed('tag', 'create'))
-		{
-			$message = __('You do not have permission to create new tags.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action' => '')) );
-			}
-		}
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Tag::action_new');
+		$this->template->content = View::factory('blog/admin/tag_form')
+			->set('legend', __('Create Tag'))
+			->set('submit', __('Create'))
+			->bind('tag', $tag)
+			->bind('errors', $errors);
 
 		$tag = Sprig::factory('tag')->values($_POST);
 
-		try
+		if ($_POST)
 		{
-			$tag->create();
-			$message = __('The tag, :name, has been created.', array(':name'=>$tag->name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
+			try
 			{
-				$this->template->content = $message;
+				$tag->create();
+
+				Message::instance()->info('The tag, :name, has been created.',
+					array(':name' => $tag->name));
+
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list')) );
 			}
-			// Else set flash message and redirect
-			else
+			catch (Validate_Exception $e)
 			{
-				Message::instance()->info($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action' => '')) );
+				$errors = $e->array->errors('admin');
 			}
-		}
-		catch (Validate_Exception $e)
-		{
-			// Setup HMVC view with data
-			$hmvc = View::factory('blog/admin/hmvc/tag_form')
-				->set('legend', __('Create Tag'))
-				->set('submit', __('Create'))
-				->set('tag', $tag)
-				->set('errors', count($_POST) ? $e->array->errors('blog') : array() );
-
-			// Setup template view
-			$view = View::factory('blog/admin/form')
-				->set('menu', $this->menu())
-				->set('form', $hmvc);
-
-			// Set request response
-			$this->template->content = $this->internal_request ? $hmvc : $view;
 		}
 	}
 
@@ -147,140 +108,55 @@ class Controller_Admin_Blog_Tag extends Controller_Template_Admin {
 	 * Edit tag details
 	 */
 	public function action_edit() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Tag::action_edit');
-
-		$id = Request::instance()->param('id');
-		$tag = Sprig::factory('tag', array('id' => $id))->load();
-
-		// If tag is invalid, return to list
-		if ( ! $tag->loaded())
-		{
-			$message = __('That tag does not exist.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		// Restrict access
-		if ( ! $this->a2->allowed($tag, 'edit'))
-		{
-			$message = __('You do not have permission to modify tag, :name.', array(':name'=>$tag->name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		$tag->values($_POST);
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/tag_form')
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Tag::action_edit');
+		$this->template->content = View::factory('blog/admin/tag_form')
 			->set('legend', __('Modify Tag'))
 			->set('submit', __('Save'))
-			->set('tag', $tag);
+			->bind('tag', $this->_resource)
+			->bind('errors', $errors);
 
-		if (count($_POST))
+		// Bind locally
+		$tag = & $this->_resource;
+
+		if ($_POST)
 		{
+			$tag->values($_POST);
+
 			try
 			{
 				$tag->update();
-				$message = __('The tag, :name, has been modified.', array(':name'=>$tag->name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->info($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				Message::instance()->info('The tag, :name, has been modified.',
+					array(':name' => $tag->name));
+
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 			catch (Validate_Exception $e)
 			{
-				$hmvc->errors = count($_POST) ? $e->array->errors('admin') : array();
+				$errors = $e->array->errors('admin');
 			}
 		}
-
-		// Setup template view
-		$view = View::factory('blog/admin/form')
-			->set('menu', $this->menu())
-			->set('form', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 	/**
 	 * Delete a tag
 	 */
 	public function action_delete() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Tag::action_delete');
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Tag::action_delete');
 
 		// If deletion is not desired, redirect to list
 		if (isset($_POST['no']))
-		{
-			Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-		}
+			$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 
-		$id = Request::instance()->param('id');
-		$tag = Sprig::factory('tag', array('id' => $id))->load();
+		$this->template->content = View::factory('blog/admin/tag_delete')
+			->bind('tag', $this->_resource);
+
+		// Bind locally
+		$tag = & $this->_resource;
 		$name = $tag->name;
-
-		// If tag is invalid, return to list
-		if ( ! $tag->loaded())
-		{
-			$message = __('That tag does not exist.');
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
-
-		// Restrict access
-		if ( ! $this->a2->allowed($tag, 'delete'))
-		{
-			$message = __('You do not have permission to delete tag, :name.', array(':name'=>$name));
-
-			// Return message if an ajax request
-			if (Request::$is_ajax)
-			{
-				$this->template->content = $message;
-			}
-			// Else set flash message and redirect
-			else
-			{
-				Message::instance()->error($message);
-				Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-			}
-		}
 
 		// If deletion is confirmed
 		if (isset($_POST['yes']))
@@ -288,50 +164,22 @@ class Controller_Admin_Blog_Tag extends Controller_Template_Admin {
 			try
 			{
 				$tag->delete();
-				$message = __('The tag, :name, has been deleted.', array(':name'=>$name));
+				Message::instance()->info('The tag, :name, has been deleted.',
+					array(':name' => $name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->info($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 			catch (Exception $e)
 			{
 				Kohana::$log->add(Kohana::ERROR, 'Error occured deleting tag, id='.$tag->id.', '.$e->getMessage());
-				$message = __('An error occured deleting tag, :name.', array(':name'=>$name));
+				Message::instance()->error('An error occured deleting tag, :name.',
+					array(':name' => $name));
 
-				// Return message if an ajax request
-				if (Request::$is_ajax)
-				{
-					$this->template->content = $message;
-				}
-				// Else set flash message and redirect
-				else
-				{
-					Message::instance()->error($message);
-					Request::instance()->redirect( Request::instance()->uri(array('action'=>'', 'id'=>NULL)) );
-				}
+				if ( ! $this->_internal)
+					$this->request->redirect( $this->request->uri(array('action'=>'list', 'id'=>NULL)) );
 			}
 		}
-
-		// Setup HMVC view with data
-		$hmvc = View::factory('blog/admin/hmvc/tag_delete')
-			->set('tag', $tag);
-
-		// Setup template view
-		$view = View::factory('blog/admin/delete')
-			->set('menu', $this->menu())
-			->set('confirm', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
 	}
 
 }	// End of Controller_Admin_Tag

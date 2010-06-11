@@ -18,5 +18,19 @@ class Model_Article_Revision extends Versioned_Revision {
 			)),
 		);
 	}
+
+	public function __get($key) {
+		if ($key == 'comment_list')
+		{
+			$return = '<ul>';
+			foreach (parent::__get('comments') as $comment)
+			{
+				$return .= '<li>'.$comment.'</li>';
+			}
+			$return .= '</ul>'.PHP_EOL;
+			return $return;
+		}
+		return parent::__get($key);
+	}
 }
 

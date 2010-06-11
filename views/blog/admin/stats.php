@@ -15,4 +15,8 @@
 			<li>Total: <?php echo $stats['articles']['total'] ?></li>
 		</ul>
 	</li>
+	<li>Comments:
+		<ul>
+			<li>Total: <?php echo $stats['comments']['total'] ?></li>
+	</li>
 </ul>

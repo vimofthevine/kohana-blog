@@ -1,4 +1,4 @@
-<h2>Delete Tag <?php echo $tag->name ?>?</h2>
+<h2><?php echo __('Delete Tag :name?', array(':name'=>$tag->name)) ?></h2>
 <p>
 	Are you sure you want to delete the tag, <?php echo $tag->name ?>?
 	This action cannot be undone.
