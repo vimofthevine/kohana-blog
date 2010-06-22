@@ -4,26 +4,33 @@
  * Blog comment management controller
  *
  * @package     Blog
+ * @category    Controller
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Admin_Blog_Comment extends Controller_Template_Admin {
+class Controller_Admin_Blog_Comment extends Controller_Admin {
 
-	/**
-	 * Register controller as admin controller
-	 */
-	public function before() {
-		parent::before();
+	protected $_resource = 'comment';
 
-		$this->restrict('comment', 'manage');
-		unset($this->template->menu->menu['Blog'][0]);
-	}
+	protected $_acl_map = array(
+		'default' => 'manage',
+	);
+
+	protected $_acl_required = 'all';
+
+	protected $_view_map = array(
+		'edit'    => 'admin/layout/narrow_column_with_menu',
+		'delete'  => 'admin/layout/narrow_column_with_menu',
+		'default' => 'admin/layout/wide_column_with_menu',
+	);
+
+	protected $_current_nav = 'admin/blog';
 
 	/**
 	 * Generate menu for comment management
 	 */
-	private function menu() {
+	protected function _menu() {
 		// Get count of ham comments
 		$ham = Sprig::factory('blog_comment', array('state'=>'ham'))->load(NULL, FALSE)->count();
 		$ham = ($ham > 0) ? ' ['.$ham.']' : '';
@@ -38,9 +45,9 @@ class Controller_Admin_Blog_Comment extends Controller_Template_Admin {
 
 		return View::factory('blog/admin/menu')
 			->set('links', array(
-				'Approved Comments'.$ham   => Request::instance()->uri(array('action' => 'approved')),
-				'Moderation Queue'.$queued => Request::instance()->uri(array('action' => 'queue')),
-				'Spam Comments'.$spam      => Request::instance()->uri(array('action' => 'spam')),
+				'Approved Comments'.$ham   => $this->request->uri(array('action' => 'approved')),
+				'Moderation Queue'.$queued => $this->request->uri(array('action' => 'queue')),
+				'Spam Comments'.$spam      => $this->request->uri(array('action' => 'spam')),
 			));
 	}
 
@@ -48,138 +55,87 @@ class Controller_Admin_Blog_Comment extends Controller_Template_Admin {
 	 * Show report
 	 */
 	public function action_list() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_list');
-
-		// Get HMVC view for comment report
-		$hmvc = Request::factory('comments/blog-admin/report/86400')->execute()->response;
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_list');
+		$this->template->content = Request::factory('comments/blog-admin/report/86400')
+			->execute()->response;
 	}
 
 	/**
 	 * Show approved comments
 	 */
 	public function action_approved() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_approved');
-
-		// Get HMVC view for moderation queue
-		$hmvc = Request::factory('comments/blog-admin/ham')->execute()->response;
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_approved');
+		$this->template->content = Request::factory('comments/blog-admin/ham')
+			->execute()->response;
 	}
 
 	/**
 	 * Show moderation queue
 	 */
 	public function action_queue() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_queue');
-
-		// Get HMVC view for moderation queue
-		$hmvc = Request::factory('comments/blog-admin/queue')->execute()->response;
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_queue');
+		$this->template->content = Request::factory('comments/blog-admin/queue')
+			->execute()->response;
 	}
 
 	/**
 	 * Show spam comments
 	 */
 	public function action_spam() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_spam');
-
-		// Get HMVC view for moderation queue
-		$hmvc = Request::factory('comments/blog-admin/spam')->execute()->response;
-
-		// Setup template view
-		$view = View::factory('blog/admin/list')
-			->set('menu', $this->menu())
-			->set('list', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $view;
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_spam');
+		$this->template->content = Request::factory('comments/blog-admin/spam')
+			->execute()->response;
 	}
 
 	/**
 	 * Edit a comment
 	 */
 	public function action_edit() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_edit');
-
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_edit');
 		$id = $this->request->param('id');
-
-		// Get HMVC view for comment edit form
-		$hmvc = Request::factory('comments/blog-admin/update/'.$id)->execute()->response;
+		$this->template->content = Request::factory('comments/blog-admin/update/'.$id)
+			->execute()->response;
 
 		// Check if update was successful
-		if ($hmvc === TRUE)
+		if ($this->template->content === TRUE)
 		{
 			Message::instance()->info('Comment has been updated');
-			Request::instance()->redirect( Request::instance()->uri(array('action' => '', 'id' => NULL)) );
+			$this->request->redirect( $this->request->uri(array('action'=>NULL, 'id'=>NULL)) );
 		}
-
-		// Setup template view
-		$form = View::factory('blog/admin/form')
-			->set('menu', $this->menu())
-			->set('form', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $form;
 	}
 
 	/**
 	 * Delete a comment
 	 */
 	public function action_delete() {
-		Kohana::$log->add(Kohana::DEBUG, 'Executing Controller_Admin_Blog_Comment::action_delete');
-
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Controller_Admin_Blog_Comment::action_delete');
 		$id = $this->request->param('id');
-
-		// Get HMVC view for comment deletion
-		$hmvc = Request::factory('comments/blog-admin/delete/'.$id)->execute()->response;
+		$this->template->content = Request::factory('comments/blog-admin/delete/'.$id)
+			->execute()->response;
 
 		// Check if deletion was successful
-		if ($hmvc === TRUE)
+		if ($this->template->content === TRUE)
 		{
 			Message::instance()->info('Comment has been deleted');
-			Request::instance()->redirect( Request::instance()->uri(array('action' => '', 'id' => NULL)) );
+			$this->request->redirect( $this->request->uri(array('action'=>NULL, 'id'=>NULL)) );
 		}
 
 		// Check if deletion was unsuccessful or not attempted
-		if ($hmvc === FALSE)
+		if ($this->template->content === FALSE)
 		{
 			if (isset($_POST['yes']))
 			{
 				Message::instance()->error('An error occured deleting the comment');
 			}
-			Request::instance()->redirect( Request::instance()->uri(array('action' => '', 'id' => NULL)) );
+			$this->request->redirect( $this->request->uri(array('action'=>NULL, 'id'=>NULL)) );
 		}
-
-		// Setup template view
-		$delete = View::factory('blog/admin/delete')
-			->set('menu', $this->menu())
-			->set('confirm', $hmvc);
-
-		// Set request response
-		$this->template->content = $this->internal_request ? $hmvc : $delete;
 	}
 
-
-}
+}	// End of Controller_Admin_Blog_Comment
 
