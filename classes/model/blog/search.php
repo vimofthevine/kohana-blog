@@ -155,21 +155,23 @@ class Model_Blog_Search extends Sprig {
 			'Executing Model_Blog_Search::search_by_date');
 
 		// Get date ranges
-		list($year, $month) = explode('/', $date, 2);
-		if (empty($month))
+		$data = explode('/', $date, 2);
+		if (isset($data[1]) AND ! empty($data[1]))
 		{
-			$begin = strtotime($year.'-01-01');
-			$end   = strtotime('+1 year', $begin);
+			$begin = strtotime($data[0].'-'.$data[1].'-01');
+			$end   = strtotime('+1 month', $begin);
 		}
 		else
 		{
-			$begin = strtotime($year.'-'.$month.'-01');
-			$end   = strtotime('+1 month', $begin);
+			$begin = strtotime($data[0].'-01-01');
+			$end   = strtotime('+1 year', $begin);
 		}
 
 		$query = DB::select()->where('state', '=', $state)
 			->where('date', '>=', $begin)
-			->where('date', '<', $end);
+			->where('date', '<', $end)
+			->order_by('id', 'DESC')
+			->order_by('date', 'DESC');
 		$limit = $this->limit;
 
 		$this->total = DB::select(DB::expr('COUNT(*) AS count'))

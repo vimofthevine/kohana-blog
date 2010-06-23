@@ -1,32 +1,31 @@
 <h2><?php echo $legend ?></h2>
+<?php if (count($articles) == 0): ?>
+<p>
+	There are no articles that have been published.
+</p>
+<?php else: ?>
 <?php echo $pagination->render() ?> 
 
 <?php foreach ($articles as $article): ?>
 	<article>
 		<header>
-			<h3><?php echo HTML::anchor( Route::get('blog_permalink')->uri(array(
-				'year'=>$article->year,
-				'month'=>$article->month,
-				'day'=>$article->day,
-				'slug'=>$article->slug)), $article->title) ?></h3>
+			<h3><?php echo HTML::anchor($article->permalink, $article->title) ?></h3>
 			<p>
 				by <?php echo ucfirst($article->author->load()->username) ?> on
 				<time datetime="<?php echo $article->date ?>">
-					<?php echo date('F jS, Y \a\t g:s a', $article->date) ?>
+					<?php echo $article->verbose('date') ?> 
 				</time><br />
 
-				Posted to <?php echo HTML::anchor( Route::get('blog_filter')->uri(array(
-					'action'=>'category', 'name'=>$article->category->load()->name)),
-					ucfirst($article->category->name)) ?><br />
-				Tagged in 
-<?php foreach ($article->tags as $tag): ?>
-					<?php echo HTML::anchor( Route::get('blog_filter')->uri(array(
-						'action'=>'tag', 'name'=>$tag->name)), ucfirst($tag->name)) ?>
-<?php endforeach; ?>
+				Posted to <?php echo HTML::anchor($article->category_link,
+					ucfirst($article->category->name)) ?><br ?>
+				Tagged in <?php echo $article->tag_list ?> 
 			</p>
 		</header>
-		<p><?php echo Text::limit_words($article->text,100,'...') ?></p>
+		<p><?php echo $article->excerpt ?></p>
 	</article>
 <?php endforeach; ?>
 
 <?php echo $pagination->render() ?> 
+
+<?php endif; ?>
+

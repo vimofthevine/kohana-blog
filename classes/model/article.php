@@ -24,6 +24,7 @@ class Model_Article extends Versioned_Sprig
 			'date'  => new Sprig_Field_Timestamp(array(
 				'auto_now_create' => TRUE,
 				'editable'        => FALSE,
+				'format'          => 'F jS, Y \a\t g:s a',
 			)),
 			'state' => new Sprig_Field_Tracked(array(
 				'choices' => array(
@@ -69,17 +70,35 @@ class Model_Article extends Versioned_Sprig
 	 * Overload Sprig::__get() to get date fields
 	 */
 	public function __get($name) {
-		if ($name == 'year')
+		if ($name == 'permalink')
 		{
-			return date("Y", $this->date);
+			$date = date('Y/n/j', $this->date);
+			return Route::get('blog/permalink')
+				->uri(array('date'=>$date, 'slug'=>$this->slug));
 		}
-		elseif ($name == 'month')
+		elseif ($name == 'category_link')
 		{
-			return date("n", $this->date);
+			return Route::get('blog/filter')->uri(array(
+				'action' => 'category', 'name' => $this->category->load()->name));
 		}
-		elseif ($name == 'day')
+		elseif ($name == 'tag_list')
 		{
-			return date("j", $this->date);
+			$return = '';
+			foreach ($this->tags as $tag)
+			{
+				$return .= HTML::anchor( Route::get('blog/filter')->uri(array(
+					'action' => 'tag', 'name' => $tag->name)), ucfirst($tag->name) );
+			}
+			return $return;
+		}
+		elseif ($name == 'excerpt')
+		{
+			$text = $this->text;
+			if (strpos($text, '<p>') !== FALSE)
+			{
+				$text = substr($text, strpos($text, '<p>'));
+			}
+			return strip_tags(Text::limit_words($text, 100, '...'));
 		}
 		else
 		{
