@@ -96,19 +96,17 @@ class Model_Statistic extends Sprig {
 	 * - Reset "today's" view count to 0
 	 */
 	public function reset() {
-		// Start over at 0
-		$this->views = 0;
+		// Import data locally
 		$data = $this->data;
-
-		for ($i = 0; $i < ($this->_today); $i++)
-		{
-			$data[$i] = $data[$i+1];
-			// Recount weekly view count
-			$this->views += $data[$i];
-		}
-
-		$data[$this->_today] = 0;
+		// Shift data
+		array_shift($data);
+		// Reset "today's" data
+		$data[] = 0;
+		// Save data
 		$this->data = $data;
+		// Recount weekly view count
+		$this->views = array_sum($data);
+
 		return $this;
 	}
 
