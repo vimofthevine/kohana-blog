@@ -34,4 +34,54 @@ class Controller_Admin_Blog_Cron extends Controller {
 		}
 	}
 
+	/**
+	 * Email daily comment report
+	 */
+	public function action_comment_report() {
+		// Check if SwiftMailer installed
+		if ( ! Kohana::find_file('vendor', 'swift/lib/swift_required'))
+		{
+			$this->request->response = 'Can not email daily comment report.  SwiftMailer is not installed.';
+			return;
+		}
+
+		// Generate report
+		$report = Request::factory('comments/blog-admin/report/86400')->execute()->response;
+
+		try
+		{
+			// Include the SwiftMailer autoloader
+			require_once Kohana::find_file('vendor', 'swift/lib/swift_required');
+
+			// Create the message
+			$message = Swift_Message::newInstance()
+				->setContentType(Kohana::config('blog.comment_report.email_type'))
+				->setSubject(Kohana::config('blog.comment_report.email_subject'))
+				->setFrom(Kohana::config('blog.comment_report.email_from'))
+				->setTo(Kohana::config('blog.comment_report.email_to'))
+				->setBody($report);
+
+			// Create the transport
+			$transport = Swift_SmtpTransport::newInstance()
+				->setHost(Kohana::config('email.options.hostname'))
+				->setPort(Kohana::config('email.options.port'))
+				->setEncryption(Kohana::config('email.options.encryption'))
+				->setUsername(Kohana::config('email.options.username'))
+				->setPassword(Kohana::config('email.options.password'));
+
+			// Create the mailer
+			$mailer = Swift_Mailer::newInstance($transport);
+
+			// Send the message
+			$mailer->send($message);
+
+			$this->request->response = 'Daily comment report email sent.';
+		}
+		catch (Exception $e)
+		{
+			Kohana::$log->add(Kohana::ERROR, 'Error occured sending daily comment report. '.$e->getMessage());
+			$this->request->response = 'Error sending email report.'.PHP_EOL;
+		}
+	}
+
 }	// End of Controller_Admin_Blog_Cron
