@@ -39,5 +39,21 @@ class Model_Blog_Comment extends Sprig {
 		);
 	}
 
+	/**
+	 * Overload Sprig::__get() to return
+	 * - email md5 hash for gravatar
+	 */
+	public function __get($name) {
+		if ($name == 'gravatar')
+		{
+			$email = md5(strtolower(trim($this->email)));
+			return $email;
+		}
+		else
+		{
+			return parent::__get($name);
+		}
+	}
+
 }
 
