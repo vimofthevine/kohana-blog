@@ -266,5 +266,63 @@ class Model_Blog_Search extends Sprig {
 		return $this->load($query, $limit);
 	}
 
+	/**
+	 * Get the top recent articles
+	 *
+	 * @param   int number of articles to load
+	 * @param   string  [optional] article state
+	 * @return  Model_Article collection
+	 */
+	public function get_recent_articles($limit = 5, $state = 'published') {
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Model_Blog_Search::get_recent_articles');
+
+		$query = DB::select()->where('state', '=', $state)
+			->order_by('date', 'DESC');
+
+		return $this->load($query, $limit);
+	}
+
+	/**
+	 * Get the most popular articles of this week
+	 *
+	 * @param   int number of articles to load
+	 * @param   string  [optional] article state
+	 * @return  Model_Article collection
+	 */
+	public function get_popular_articles($limit = 5, $state = 'published') {
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Model_Blog_Search::get_popular_articles');
+
+		$stat    = Sprig::factory('statistic');
+		$s_table = $stat->table();
+		$article = Sprig::factory('article');
+		$a_table = $article->table();
+
+		$query = DB::select()
+			->join($s_table)
+			->on($article->fk($s_table), '=', $article->pk(TRUE))
+			->where($a_table.'.state', '=', $state)
+			->order_by($s_table.'.views', 'DESC');
+
+		return $this->load($query, $limit);
+	}
+
+	/**
+	 * Get the top recent comments
+	 *
+	 * @todo    Move this logic to comments module
+	 *
+	 * @param   int number of comments to load
+	 * @return  Model_Blog_Comment collection
+	 */
+	public function get_recent_comments($limit = 5) {
+		Kohana::$log->add(Kohana::DEBUG,
+			'Executing Model_Blog_Search::get_recent_comments');
+
+		$query = DB::select()->order_by('date', 'DESC');
+		return Sprig::factory('blog_comment')->load($query, $limit);
+	}
+
 }	// End of Model_Blog_Search
 

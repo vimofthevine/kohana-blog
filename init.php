@@ -31,6 +31,12 @@ Route::set('blog/archive', 'blog/archive/<date>(/page<page>)', array(
 		'action'     => 'archive',
 	));
 
+Route::set('blog/stats', 'blog/stats/<action>(/<id>)')
+	->defaults(array(
+		'directory'  => 'blog',
+		'controller' => 'stats',
+	));
+
 Route::set('admin/blog/diff', 'admin/blog/diff/<id>/<ver1>/<ver2>')
 	->defaults(array(
 		'directory'  => 'admin/blog',

@@ -11,7 +11,7 @@
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Blog_Articles extends Controller_Template_Website {
+abstract class Controller_Blog_Articles extends Controller_Template_Website {
 
 	public function action_published() {
 		Kohana::$log->add(Kohana::DEBUG,

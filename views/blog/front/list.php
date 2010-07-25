@@ -12,7 +12,7 @@
 			<h3><?php echo HTML::anchor($article->permalink, $article->title) ?></h3>
 			<p>
 				by <?php echo ucfirst($article->author->load()->username) ?> on
-				<time datetime="<?php echo $article->date ?>">
+				<time datetime="<?php echo date('Y-m-d', $article->date) ?>">
 					<?php echo $article->verbose('date') ?> 
 				</time><br />
 
