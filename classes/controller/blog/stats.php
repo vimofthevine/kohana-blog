@@ -21,7 +21,7 @@ class Controller_Blog_Stats extends Controller_Template_Website {
 			->set('legend', __('Recent Articles'))
 			->bind('articles', $articles);
 
-		$limit    = $this->request->param('id', NULL);
+		$limit    = $this->request->param('limit', NULL);
 		$search   = Sprig::factory('blog_search');
 		$articles = $search->get_recent_articles($limit);
 	}
@@ -36,7 +36,7 @@ class Controller_Blog_Stats extends Controller_Template_Website {
 			->set('legend', __('Popular This Week'))
 			->bind('articles', $articles);
 
-		$limit    = $this->request->param('id');
+		$limit    = $this->request->param('limit', NULL);
 		$search   = Sprig::factory('blog_search');
 		$articles = $search->get_popular_articles($limit);
 	}
@@ -51,7 +51,7 @@ class Controller_Blog_Stats extends Controller_Template_Website {
 			->set('legend', __('Recent Comments'))
 			->bind('comments', $comments);
 
-		$limit    = $this->request->param('id');
+		$limit    = $this->request->param('limit', NULL);
 		$search   = Sprig::factory('blog_search');
 		$comments = $search->get_recent_comments($limit);
 	}

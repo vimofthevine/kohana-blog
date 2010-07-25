@@ -13,6 +13,10 @@
  */
 abstract class Controller_Blog_Articles extends Controller_Template_Website {
 
+	/**
+	 * Display a list of all published articles,
+	 * with pagination
+	 */
 	public function action_published() {
 		Kohana::$log->add(Kohana::DEBUG,
 			'Executing Controller_Blog::action_published');
@@ -26,6 +30,13 @@ abstract class Controller_Blog_Articles extends Controller_Template_Website {
 		$pagination = $search->pagination;
 	}
 
+	/**
+	 * Display a list of published articles,
+	 * filtered by category,
+	 * with pagination
+	 *
+	 * Set request param `name` to the category name
+	 */
 	public function action_category() {
 		Kohana::$log->add(Kohana::DEBUG,
 			'Executing Controller_Blog::action_category');
@@ -41,6 +52,13 @@ abstract class Controller_Blog_Articles extends Controller_Template_Website {
 		$legend     = __(':name Articles', array(':name'=>ucfirst($category)));
 	}
 
+	/**
+	 * Display a list of published articles,
+	 * filtered by tag,
+	 * with pagination
+	 *
+	 * Set request param `name` to the tag name
+	 */
 	public function action_tag() {
 		Kohana::$log->add(Kohana::DEBUG,
 			'Executing Controller_Blog::action_tag');
@@ -57,6 +75,15 @@ abstract class Controller_Blog_Articles extends Controller_Template_Website {
 			array(':name' => ucfirst($tag)));
 	}
 
+	/**
+	 * Display an individual article
+	 *
+	 * - Record view statistics
+	 * - Show comment form and list
+	 *
+	 * Set request param `date` to YYYY/MM/DD and
+	 * param `slug` to the article slug
+	 */
 	public function action_article() {
 		Kohana::$log->add(Kohana::DEBUG,
 			'Executing Controller_Blog::action_article');
@@ -90,6 +117,13 @@ abstract class Controller_Blog_Articles extends Controller_Template_Website {
 		}
 	}
 
+	/**
+	 * Display a list of published articles,
+	 * filtered by date (year or month),
+	 * with pagination
+	 *
+	 * Set request param `date` to either YYYY/MM or YYYY
+	 */
 	public function action_archive() {
 		Kohana::$log->add(Kohana::DEBUG,
 			'Executing Controller_Blog::action_archive');

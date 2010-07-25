@@ -3,7 +3,7 @@
 /**
  * Blog comment management controller
  *
- * @package     Blog
+ * @package     Admin
  * @category    Controller
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig

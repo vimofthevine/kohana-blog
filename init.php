@@ -31,8 +31,9 @@ Route::set('blog/archive', 'blog/archive/<date>(/page<page>)', array(
 		'action'     => 'archive',
 	));
 
-Route::set('blog/stats', 'blog/stats/<action>(/<id>)')
-	->defaults(array(
+Route::set('blog/stats', 'blog/stats/<action>(/<limit>)', array(
+		'limit' => '\d+',
+	))->defaults(array(
 		'directory'  => 'blog',
 		'controller' => 'stats',
 	));

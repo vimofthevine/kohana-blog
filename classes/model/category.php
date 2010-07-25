@@ -4,6 +4,7 @@
  * Blog category model
  *
  * @package     Blog
+ * @category    Model
  * @author      Kyle Treubig
  * @copyright   (c) 2010 B&K Web Design Solutions
  * @license     MIT

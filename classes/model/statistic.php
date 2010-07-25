@@ -4,6 +4,7 @@
  * Blog statistic model
  *
  * @package     Blog
+ * @category    Model
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
@@ -15,9 +16,14 @@ class Model_Statistic extends Sprig {
 	 */
 	private $_length = 7;
 
-	// Constant index for today
+	/**
+	 * @var int Constant index for today
+	 */
 	private $_today = 6;
 
+	/**
+	 * Setup fields for the statistic model
+	 */
 	public function _init() {
 		$this->_fields += array(
 			'id'        => new Sprig_Field_Auto,
@@ -72,6 +78,7 @@ class Model_Statistic extends Sprig {
 
 	/**
 	 * Perform page view count
+	 *
 	 * - Increment total view count
 	 * - Increment weekly view count
 	 * - Increment "today's" view count
@@ -91,9 +98,10 @@ class Model_Statistic extends Sprig {
 
 	/**
 	 * Perform daily view count reset
-	 * - Reset weekly view count to 0
-	 * - Cycle through daily data counts and shift data points
+	 *
+	 * - Shift daily data counts
 	 * - Reset "today's" view count to 0
+	 * - Recalculate weekly view count
 	 */
 	public function reset() {
 		// Import data locally

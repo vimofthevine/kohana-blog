@@ -4,12 +4,16 @@
  * Comment model
  *
  * @package     Blog
+ * @category    Model
  * @author      Kyle Treubig
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
 class Model_Blog_Comment extends Sprig {
 
+	/**
+	 * Set fields for the blog comment model
+	 */
 	public function _init() {
 		$this->_fields += array(
 			'id'     => new Sprig_Field_Auto,
@@ -41,6 +45,7 @@ class Model_Blog_Comment extends Sprig {
 
 	/**
 	 * Overload Sprig::__get() to return
+	 *
 	 * - email md5 hash for gravatar
 	 */
 	public function __get($name) {

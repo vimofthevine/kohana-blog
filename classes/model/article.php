@@ -12,6 +12,9 @@
 class Model_Article extends Versioned_Sprig
 	implements Acl_Resource_Interface {
 
+	/**
+	 * Set the fields for the blog article
+	 */
 	public function _init() {
 		parent::_init();
 		$this->_fields += array(
@@ -67,7 +70,11 @@ class Model_Article extends Versioned_Sprig
 	}
 
 	/**
-	 * Overload Sprig::__get() to get date fields
+	 * Overload Sprig::__get() to get
+	 * - permalink URLs
+	 * - associated category URL
+	 * - tag list (with URLs)
+	 * - article excerpt
 	 */
 	public function __get($name) {
 		if ($name == 'permalink')

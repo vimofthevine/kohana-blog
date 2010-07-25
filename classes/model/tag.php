@@ -4,6 +4,7 @@
  * Blog tag model
  *
  * @package     Blog
+ * @category    Model
  * @author      Kyle Treubig
  * @copyright   (c) 2010 B&K Web Design Solutions
  * @license     MIT
@@ -11,6 +12,9 @@
 class Model_Tag extends Sprig
 	implements Acl_Resource_Interface {
 
+	/**
+	 * Setup fields for blog tags
+	 */
 	public function _init() {
 		$this->_fields += array(
 			'id'        => new Sprig_Field_Auto,

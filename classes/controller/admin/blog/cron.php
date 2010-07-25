@@ -3,6 +3,11 @@
 /**
  * Blog cron functions controller
  *
+ * To run these cron methods, set up a cron job to run
+ *
+ * - `php index.php --uri=admin/blog/cron/stats_reset`
+ * - `php index.php --uri=admin/blog/cron/comment_report`
+ *
  * @package     Blog
  * @category    Controller
  * @author      Kyle Treubig
